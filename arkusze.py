@@ -283,7 +283,7 @@ def zestawienie():
         new_list_of_events = input(3*"\n" + 22*" " + "Czy chcesz stworzyć nowe zestawienie?\n" + 23*" " + "Aktualne zostanie nadpisane! [T/N] ").upper()
         if new_list_of_events == ("T" or "TAK"):
             new = False
-            month = (input(3*"\n" + 27* + "Wprowadz słownie miesiąc: \n" + 36*" ")).title()
+            month = (input(3*"\n" + 27*" " + "Wprowadz słownie miesiąc: \n" + 36*" ")).title()
             outfile = open("zestawienie.txt", "w")
             outfile.write("Zestawienie za miesiąc %s:\n" % month)
             outfile.close()
