@@ -3,7 +3,7 @@ from openpyxl.utils import column_index_from_string
 from itertools import groupby
 from operator import itemgetter
 from os import system, name
-from sys import exit
+
 
 def welcome_screen():
     system("cls" if name == "nt" else "clear")
@@ -124,13 +124,13 @@ def print_l4(wkr, lst, month_number, y):
             welcome_screen()
             L4_no = input("%s: podaj nr L4 z dni %02d-%02d.%02d.%04d" % (wkr, f_day, l_day, month_number, y.value))
             outfile = (open("zestawienie.txt", "a"))
-            outfile.write("- Zwolnienie L4 w dniach: %02d-%02d.%02d.%04d. Numer zwolnienia: %s\n" % (f_day, l_day, month_number, y.value, L4_no.upper()))
+            outfile.write("- Zwolnienie L4 w dniach: %02d-%02d.%02d.%04d. Numer zwolnienia:  %s\n" % (f_day, l_day, month_number, y.value, L4_no.upper()))
             outfile.close()
         else:
             welcome_screen()
             L4_no = input("%s: podaj nr L4 z dnia %02d.%02d.%04d" % (wkr, f_day, month_number, y.value))
             outfile = (open("zestawienie.txt", "a"))
-            outfile.write("- Zwolnienie L4 w dniu: %02d.%02d.%04d. Numer zwolnienia: %s\n" % (f_day, month_number, y.value, L4_no.upper()))
+            outfile.write("- Zwolnienie L4 w dniu: %02d.%02d.%04d. Numer zwolnienia:  %s\n" % (f_day, month_number, y.value, L4_no.upper()))
             outfile.close()
 
 
@@ -183,7 +183,7 @@ def create(m, file):
 
     # opening work schedule file
     wb = openpyxl.load_workbook("%s.xlsx" % file, data_only=True)
-    sh = wb.get_sheet_by_name("Grafik_" + m)
+    sh = wb["Grafik_" + m]
 
     # looking for shop's name and setting it's code to variable
     shop = lf_shop(sh, shops) # variable set to cell object
@@ -199,7 +199,6 @@ def create(m, file):
     outfile = open("zestawienie.txt", "a")
     outfile.write("\n\n\n" + shop.value.upper()  + ":\n")
     outfile.close()
-    print("\n\n\n" + shop.value.upper()  + ":")
 
     # itrates through workers
     for worker in workers:
@@ -232,7 +231,7 @@ def create(m, file):
             sl_days = event_check(lst_sl, c_day, a_cell, sl, sh, worker)
 
             fl = "UOJ"
-            fl_days = event_check(lst_sl, c_day, a_cell, fl, sh, worker)
+            fl_days = event_check(lst_fl, c_day, a_cell, fl, sh, worker)
 
         print_vl(vl_days, n_m, year)
         print_lor(lor_days, n_m, year, sh, worker, shop)
@@ -245,62 +244,23 @@ def create(m, file):
         outfile.close()
 
 
-# lets user to choose exit or work with next file
-def file_input(month):
-    welcome_screen()
-    next_one = True
-    while next_one is True:
-        q = True
-        while q is True:
-            shop_filename = input("nazwa pliku z grafikiem (skopiuj nazwe i wklej bez rozszerzenia): \n")
-            try:
-                welcome_screen()
-                create(month, shop_filename)
-                next_one = False
-                break
-            except:
-                print("Nie ma takiego pliku lub miesiaca. Wprowadź jeszcze raz miesiąc.\n")
-                month = (input("\n\nWprowadz słownie miesiąc: ")).title()
-                q = True
-    c = True
-    while c is True:
-        next = input("\n\nCzy wprowadzic kolejny grafik? [T/N] ").upper()
-        if next == ("T" or "TAK"):
-            c = False
-        elif next == ("N" or "NIE"):
-            welcome_screen()
-            print("\n"*3 + " " * 31 + "Zestawienie gotowe\n" + " " * 24 + "Wyniki w pliku 'zestawienie.txt'")
-            exit()
-        else:
-            c = True
-    file_input(month)
-
-
 def zestawienie():
     welcome_screen()
-    new = True
-    while new is True:
-        new_list_of_events = input(3*"\n" + 22*" " + "Czy chcesz stworzyć nowe zestawienie?\n" + 23*" " + "Aktualne zostanie nadpisane! [T/N] ").upper()
-        if new_list_of_events == ("T" or "TAK"):
-            new = False
-            month = (input(3*"\n" + 27*" " + "Wprowadz słownie miesiąc: \n" + 36*" ")).title()
-            outfile = open("zestawienie.txt", "w")
-            outfile.write("Zestawienie za miesiąc %s:\n" % month)
-            outfile.close()
+    n_o_s_h = []
+    number_of_shops = int(input(3*"\n" + 22* " " + "Dla ilu sklepów ma być zestawienie?"))
+    for i in range(0, number_of_shops):
+        welcome_screen()
+        n_o_s_h.append(input(6 * " " + "Nazwa pliku z %s grafikiem (skopiuj nazwe i wklej bez rozszerzenia):\n" % str(i+1)))
+    month = (input(3*"\n" + 27*" " + "Wprowadz słownie miesiąc: \n" + 36*" ")).title()
 
-            file_input(month)
-            break
-
-        elif new_list_of_events == ("N" or "NIE"):
-            print(3*"\n" + 32* " " + "Do następnego :)")
-            new = False
-        else:
-            welcome_screen()
-            print(3*"\n" + 27*" " + "Coś nie tak, jeszcze raz.")
-            new = True
-
-
-
+    welcome_screen()
+    outfile = open("zestawienie.txt", "w")
+    outfile.write("Zestawienie dla miesiąca: %s" % month)
+    outfile.close()
+    for shop in n_o_s_h:
+        create(month, shop)
+        welcome_screen()
+    print("\n"*3 + " " * 31 + "Zestawienie gotowe\n" + " " * 24 + 'Wyniki w pliku "zestawienie.txt"')
 
 
 zestawienie()
