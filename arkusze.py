@@ -13,6 +13,18 @@ def welcome_screen():
     print(80*"=")
 
 
+# Describes to user "to do" and "not to do" stuff
+def instructions():
+    welcome_screen()
+    print("\nProgram poprosi Cię o wprowadzenie ilości sklepów, dla których chcesz utworzyć zestawienie.")
+    print("Następnie z grafików, które wprowadzisz wyciągnie potrzebne dane i ewentualnie poprosi Cię o wpisanie dodatkowych informacji.")
+    print("\n1. Grafik musi być w formacie xlsx, a nie xls - inaczej nie działa. Zmiana rozszerzenia nic nie da, trzeba zapisać plik w tym formacie.")
+    print("2. miesiąc musi być wpisany słownie, inaczej nie zadziała.")
+    print("3. nazwę grafiku najlepiej skopiować i wkleić, jeśli będzie się różnić od nazwy pliku, to kaplica.")
+    print("\n!!!\nZłamanie powyższych punktów spowoduje wysypanie się programu, jeszcze nie wprowadziłem zabezpieczeń ;)\n!!!")
+    print("\nMam nadzieję, że program się przyda ;)   A teraz [enter] i do dzieła!")
+
+
 # returns a month it's number
 def num_month(month):
     if month == "Styczeń":
@@ -55,12 +67,12 @@ def lf_shop(sheet, our_shops):
 
 
 # returns dictionary: [worker's_number: worker's_name]
-def list_of_workers(sheet):
+def list_of_workers(sheet, shop_cell):
     workers = {}
     for i in range(4, int(sheet.max_column)):
-        if type(sheet.cell(row=13, column=i).value) == str:
-            name = (sheet.cell(row=13, column=i)).value
-            surname = (sheet.cell(row=14, column=i)).value
+        if type(sheet.cell(row=shop_cell.row, column=i).value) == str:
+            name = (sheet.cell(row=shop_cell.row, column=i)).value
+            surname = (sheet.cell(row=shop_cell.row+1, column=i)).value
             workers[i] = (name + " " + surname) # key in dictionary is a number of column for each worker
     return workers
 
@@ -111,7 +123,7 @@ def print_lor(lst, month_number, y, sheet, i_obj, coord_cell):
         outfile.close()
 
 
-def print_l4(wkr, lst, month_number, y):
+def print_l4(wkr, lst, month_number, y, shop):
     ranges = []
     for k, g in groupby(enumerate(lst), lambda x: x[0] - x[1]):
         group = (map(itemgetter(1), g))
@@ -122,13 +134,13 @@ def print_l4(wkr, lst, month_number, y):
         l_day = L4[1]
         if f_day != l_day:
             welcome_screen()
-            L4_no = input("%s: podaj nr L4 z dni %02d-%02d.%02d.%04d" % (wkr, f_day, l_day, month_number, y.value))
+            L4_no = input("%s: %s: podaj nr L4 z dni %02d-%02d.%02d.%04d" % (shop, wkr, f_day, l_day, month_number, y.value))
             outfile = (open("zestawienie.txt", "a"))
             outfile.write("- Zwolnienie L4 w dniach: %02d-%02d.%02d.%04d. Numer zwolnienia:  %s\n" % (f_day, l_day, month_number, y.value, L4_no.upper()))
             outfile.close()
         else:
             welcome_screen()
-            L4_no = input("%s: podaj nr L4 z dnia %02d.%02d.%04d" % (wkr, f_day, month_number, y.value))
+            L4_no = input("%s: %s: podaj nr L4 z dnia %02d.%02d.%04d" % (shop, wkr, f_day, month_number, y.value))
             outfile = (open("zestawienie.txt", "a"))
             outfile.write("- Zwolnienie L4 w dniu: %02d.%02d.%04d. Numer zwolnienia:  %s\n" % (f_day, month_number, y.value, L4_no.upper()))
             outfile.close()
@@ -189,7 +201,7 @@ def create(m, file):
     shop = lf_shop(sh, shops) # variable set to cell object
 
     # making list of workers
-    workers = list_of_workers(sh)
+    workers = list_of_workers(sh, shop)
 
     shop_n_row = shop.row
     shop_n_col = column_index_from_string(shop.column)
@@ -199,6 +211,7 @@ def create(m, file):
     outfile = open("zestawienie.txt", "a")
     outfile.write("\n\n\n" + shop.value.upper()  + ":\n")
     outfile.close()
+
 
     # itrates through workers
     for worker in workers:
@@ -235,7 +248,7 @@ def create(m, file):
 
         print_vl(vl_days, n_m, year)
         print_lor(lor_days, n_m, year, sh, worker, shop)
-        print_l4(workers[worker], l4_days, n_m, year)
+        print_l4(workers[worker], l4_days, n_m, year, shop.value)
         print_sl(sl_days, n_m, year)
         print_fl(fl_days, n_m, year)
 
@@ -245,6 +258,8 @@ def create(m, file):
 
 
 def zestawienie():
+    instructions()
+    input()
     welcome_screen()
     n_o_s_h = []
     number_of_shops = int(input(3*"\n" + 22* " " + "Dla ilu sklepów ma być zestawienie?"))
@@ -261,6 +276,7 @@ def zestawienie():
         create(month, shop)
         welcome_screen()
     print("\n"*3 + " " * 31 + "Zestawienie gotowe\n" + " " * 24 + 'Wyniki w pliku "zestawienie.txt"')
+
 
 
 zestawienie()
