@@ -280,3 +280,4 @@ def zestawienie():
 
 
 zestawienie()
+input()
