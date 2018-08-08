@@ -79,9 +79,14 @@ def list_of_workers(sheet, shop_cell):
 
 # counts sum of hours worked in month by employee
 def count_working_hours(w_h, current_day, active_cell, sheet):
-    if type(current_day.value) == int:
-        w_h += sheet.cell(row=current_day.row, column=column_index_from_string(active_cell.column) - 1).value
-    return w_h
+    try:
+        if type(current_day.value) == int:
+            w_h += sheet.cell(row=current_day.row, column=column_index_from_string(active_cell.column) - 1).value
+        return w_h
+    except:
+        c = sheet.cell(row=current_day.row, column=column_index_from_string(active_cell.column) - 1)
+        w_h += int(input("Błąd w grafiku. Sprawdź komórkę %s%s i wpisz prawidlowa liczbe godzin pracy tego dnia:\n" % (c.row, c.column)))
+        return w_h
 
 
 # looks for events
