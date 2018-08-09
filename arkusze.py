@@ -3,9 +3,10 @@ from openpyxl.utils import column_index_from_string
 from itertools import groupby
 from operator import itemgetter
 from os import system, name
+from os.path import isfile
 
 
-def welcome_screen():
+def header():
     system("cls" if name == "nt" else "clear")
     print(80*"=")
     print("||" + " "*24 + "Zestawienia grafikowe v.1.0" + " "*25 + "||")
@@ -15,7 +16,7 @@ def welcome_screen():
 
 # Describes to user "to do" and "not to do" stuff
 def instructions():
-    welcome_screen()
+    header()
     print("\nProgram poprosi Cię o wprowadzenie ilości sklepów, dla których chcesz utworzyć zestawienie.")
     print("Następnie z grafików, które wprowadzisz wyciągnie potrzebne dane i ewentualnie poprosi Cię o wpisanie dodatkowych informacji.")
     print("\n1. Grafik musi być w formacie xlsx, a nie xls - inaczej nie działa. Zmiana rozszerzenia nic nie da, trzeba zapisać plik w tym formacie.")
@@ -56,7 +57,7 @@ def num_month(month):
     return n_m
 
 
-# looks for shop's name and returns it's cell as a variable
+# looks for shop's name and returns it's cell
 def lf_shop(sheet, our_shops):
     shop = {}
     for i in range(int(sheet.max_row + 1)):
@@ -69,7 +70,7 @@ def lf_shop(sheet, our_shops):
 # returns dictionary: [worker's_number: worker's_name]
 def list_of_workers(sheet, shop_cell):
     workers = {}
-    for i in range(4, int(sheet.max_column)):
+    for i in range(column_index_from_string(shop_cell.column)+2, int(sheet.max_column)):
         if type(sheet.cell(row=shop_cell.row, column=i).value) == str:
             name = (sheet.cell(row=shop_cell.row, column=i)).value
             surname = (sheet.cell(row=shop_cell.row+1, column=i)).value
@@ -84,8 +85,14 @@ def count_working_hours(w_h, current_day, active_cell, sheet):
             w_h += sheet.cell(row=current_day.row, column=column_index_from_string(active_cell.column) - 1).value
         return w_h
     except:
-        c = sheet.cell(row=current_day.row, column=column_index_from_string(active_cell.column) - 1)
-        w_h += int(input("Błąd w grafiku. Sprawdź komórkę %s%s i wpisz prawidlowa liczbe godzin pracy tego dnia:\n" % (c.row, c.column)))
+        check = True
+        while check == True:
+            c = sheet.cell(row=current_day.row, column=column_index_from_string(active_cell.column) - 1)
+            try:
+                w_h += int(input("Błąd w grafiku. Sprawdź komórkę %s%s i wpisz prawidlowa liczbe godzin pracy tego dnia:\n" % (c.column, c.row)))
+                check = False
+            except ValueError:
+                print("Coś nie tak")
         return w_h
 
 
@@ -138,13 +145,13 @@ def print_l4(wkr, lst, month_number, y, shop):
         f_day = L4[0]
         l_day = L4[1]
         if f_day != l_day:
-            welcome_screen()
+            header()
             L4_no = input("%s: %s: podaj nr L4 z dni %02d-%02d.%02d.%04d" % (shop, wkr, f_day, l_day, month_number, y.value))
             outfile = (open("zestawienie.txt", "a"))
             outfile.write("- Zwolnienie L4 w dniach: %02d-%02d.%02d.%04d. Numer zwolnienia:  %s\n" % (f_day, l_day, month_number, y.value, L4_no.upper()))
             outfile.close()
         else:
-            welcome_screen()
+            header()
             L4_no = input("%s: %s: podaj nr L4 z dnia %02d.%02d.%04d" % (shop, wkr, f_day, month_number, y.value))
             outfile = (open("zestawienie.txt", "a"))
             outfile.write("- Zwolnienie L4 w dniu: %02d.%02d.%04d. Numer zwolnienia:  %s\n" % (f_day, month_number, y.value, L4_no.upper()))
@@ -192,15 +199,23 @@ def print_fl(lst, month_number, y):
 
 
 # gets everything together and prints to file
-def create(m, file):
-    n_m = num_month(m)
+def create(file):
 
     # list of our shops
     shops = ["DBC", "DKD", "DGS", "DGK", "DO", "DPP", "DPA", "DSP", "DWW", "DWB", "DLM", "DWT"]
 
     # opening work schedule file
     wb = openpyxl.load_workbook("%s.xlsx" % file, data_only=True)
-    sh = wb["Grafik_" + m]
+
+    check = True
+    while check == True:
+        try:
+            m = (input(3*"\n" + 27*" " + "Wprowadz słownie miesiąc: \n" + 36*" ")).title()
+            n_m = num_month(m)
+            sh = wb["Grafik_" + m]
+            check = False
+        except KeyError:
+            print("Coś nie tak.")
 
     # looking for shop's name and setting it's code to variable
     shop = lf_shop(sh, shops) # variable set to cell object
@@ -265,21 +280,35 @@ def create(m, file):
 def zestawienie():
     instructions()
     input()
-    welcome_screen()
+    header()
     n_o_s_h = []
-    number_of_shops = int(input(3*"\n" + 22* " " + "Dla ilu sklepów ma być zestawienie?"))
+    check = True
+    while check == True:
+        try:
+            number_of_shops = int(input(3*"\n" + 22* " " + "Dla ilu sklepów ma być zestawienie?"))
+            check = False
+        except ValueError:
+            print("Coś nie tak")
+            
     for i in range(0, number_of_shops):
-        welcome_screen()
-        n_o_s_h.append(input(6 * " " + "Nazwa pliku z %s grafikiem (skopiuj nazwe i wklej bez rozszerzenia):\n" % str(i+1)))
-    month = (input(3*"\n" + 27*" " + "Wprowadz słownie miesiąc: \n" + 36*" ")).title()
+        header()
+        check = True
+        while check == True:
+            c = (input(6 * " " + "Nazwa pliku z %s grafikiem (skopiuj nazwe i wklej bez rozszerzenia):\n" % str(i+1)))
+            if isfile("%s.xlsx" % c) == True:
+                n_o_s_h.append(c)
+                check = False
+            else:
+                print("Nie ma takiego pliku z grafikiem. Spróbuj jeszcze raz")
+                                
 
-    welcome_screen()
+    header()
     outfile = open("zestawienie.txt", "w")
-    outfile.write("Zestawienie dla miesiąca: %s" % month)
+    outfile.write("Zestawienie")
     outfile.close()
     for shop in n_o_s_h:
-        create(month, shop)
-        welcome_screen()
+        create(shop)
+        header()
     print("\n"*3 + " " * 31 + "Zestawienie gotowe\n" + " " * 24 + 'Wyniki w pliku "zestawienie.txt"')
 
 
